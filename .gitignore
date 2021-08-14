@@ -1,0 +1,32 @@
+# Gitignore file for Build Info Generator.
+
+
+############################################
+###                Custom                ###
+############################################
+x64/Debug
+#x64/Release
+
+
+############################################
+###           Windows specific           ###
+############################################
+Thumbs.db
+desktop.ini
+
+# Dump file
+*.stackdump
+
+
+############################################
+###             VS specific              ###
+############################################
+
+# VS cache
+.vs/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
