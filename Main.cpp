@@ -282,9 +282,15 @@ void PrintHelpText()
 	std::cout << "	D" << std::endl;
 }
 
-// Parse all command line arguments and output result
+// Parse all command line arguments and output result. Returns false if application should exit
 bool ParseCommandLineArguments(std::vector<std::wstring> arguments, std::wstring& filenameOut, bool& enableTimeOut, bool& resetOut)
 {
+	// Set output values to default state
+	filenameOut = L"";
+	enableTimeOut = false;
+	resetOut = false;
+
+	// Check for at least one user argument
 	if (arguments.size() <= 1)
 	{
 		// No user arguments passed, only executable path from OS. Show help
@@ -292,6 +298,23 @@ bool ParseCommandLineArguments(std::vector<std::wstring> arguments, std::wstring
 
 		PrintHelpText();
 		return false;
+	}
+
+	// Check if only one user argument is present
+	if (arguments.size() == 2)
+	{
+		// Is the only argument "/help"?
+		if (arguments[1] == L"/help")
+		{
+			PrintHelpText();
+			return false;
+		}
+		else
+		{
+			// Argument should be the filename
+			filenameOut = arguments[1];
+			return true;
+		}
 	}
 
 	// Vector is guaranteed to have at least two elements. Get the second element (filename) directly, because it's required
@@ -322,7 +345,11 @@ int main()
 	const std::vector<std::wstring> commandArguments = GetCommandLineArguments();
 
 	// Parse user arguments
-	if (ParseCommandLineArguments(commandArguments, filename, enableTime, reset))
+	std::wstring	filename = L"";
+	bool			enableTime = false;
+	bool			reset = false;
+
+	if (!ParseCommandLineArguments(commandArguments, filename, enableTime, reset))
 		return -1; // Parse failed, error message got print inside function
 
 
