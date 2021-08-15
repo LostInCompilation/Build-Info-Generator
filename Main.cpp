@@ -55,7 +55,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	if (spacePos == std::string::npos)
 	{
 		// Space not found
-		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a space. File corrupted?" << std::endl;
+		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a space. File may be damaged." << std::endl;
 		return false;
 	}
 
@@ -64,7 +64,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	if (numberString == "")
 	{
 		// No value found
-		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a value. File corrupted?" << std::endl;
+		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a value. File may be damaged." << std::endl;
 		return false;
 	}
 
@@ -77,7 +77,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 		parsedIntegerOut = std::stoull(numberString);
 	}
 	catch (...) {
-		std::cout << "[ERROR]: Could not parse value of \"" << currentLineView.substr(startPoint) << "\". File corrupted ? " << std::endl;
+		std::cout << "[ERROR]: Could not parse value of \"" << currentLineView.substr(startPoint) << "\". File may be damaged." << std::endl;
 		return false;
 	}
 
@@ -156,7 +156,7 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 	// Check if build number macro was found (necessary)
 	if (!macroBuildNumberResult.first)
 	{
-		std::cout << "[ERROR]: Macro \"" << _MacroBuildNumber << "\" not found! File corrupted?" << std::endl;
+		std::cout << "[ERROR]: Macro \"" << _MacroBuildNumber << "\" not found! File may be damaged." << std::endl;
 		return false;
 	}
 
@@ -237,7 +237,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& b
 	// Check if write succeeded
 	if (!buildInfoFile.good())
 	{
-		std::cout << "[ERROR]: Writing to file failed! File may be corrupted. Do you have write permissions?" << std::endl;
+		std::cout << "[ERROR]: Writing to file failed! File may be damaged. Do you have write permissions?" << std::endl;
 
 		buildInfoFile.close();
 		return false;
@@ -272,6 +272,15 @@ std::vector<std::wstring> GetCommandLineArguments()
 	return commandArguments;
 }
 
+// Parse all command line arguments and output result
+bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, std::wstring& filenameOut, bool& enableTimeOut, bool& resetOut)
+{
+
+
+	return true;
+}
+
+// Main routine
 int main()
 {
 	std::cout << "Build Info Generator: ";
