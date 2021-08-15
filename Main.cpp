@@ -231,7 +231,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& b
 	buildInfoFile.write(assembledMacros.data(), assembledMacros.size());
 
 	// Write EOF signal
-	const std::string eofSignal = u8"/********************** End of generated file **********************/\n";
+	const std::string eofSignal = u8"/********************** End of generated file **********************/";
 	buildInfoFile.write(eofSignal.data(), eofSignal.size());
 
 	// Check if write succeeded
