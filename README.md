@@ -7,7 +7,7 @@
 A simple tool to auto generate a header file containing the current build number and the current build date and time.
 The header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
-See [instructions](#abc) below for usage.
+See [instructions](#Instructions) below for usage.
 
 ## Features
 - a
@@ -18,7 +18,7 @@ See [instructions](#abc) below for usage.
 - e
 
 
-## Instructions {#abc}
+## Instructions
 
 Instr.
 

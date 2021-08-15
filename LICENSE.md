@@ -1,7 +1,7 @@
 # License
 
-Build Info Generator
+**Build Info Generator**
 
 (C) 2021 Marc Schöndorf
 
-LICENSE
+ADD LICENSE

@@ -20,15 +20,15 @@
 // Macro names (should be ASCII, because the search function currently doesn't find Unicode chars. The file is still written as UTF-8)
 const std::string _MacroPause = "BUILD_INFO_GENERATOR_PAUSE";
 
-const std::string _MacroBuildNumber = "AUTOMATIC_BUILD_INFO_NUMBER";
+const std::string _MacroBuildNumber = "BUILD_INFO_GENERATOR_BUILD_NUMBER";
 
-const std::string _MacroBuildDay = "AUTOMATIC_BUILD_INFO_DAY";
-const std::string _MacroBuildMonth = "AUTOMATIC_BUILD_INFO_MONTH";
-const std::string _MacroBuildYear = "AUTOMATIC_BUILD_INFO_YEAR";
+const std::string _MacroBuildDay = "BUILD_INFO_GENERATOR_DAY";
+const std::string _MacroBuildMonth = "BUILD_INFO_GENERATOR_MONTH";
+const std::string _MacroBuildYear = "BUILD_INFO_GENERATOR_YEAR";
 
-const std::string _MacroBuildHour = "AUTOMATIC_BUILD_INFO_HOUR";
-const std::string _MacroBuildMinute = "AUTOMATIC_BUILD_INFO_MINUTE";
-const std::string _MacroBuildSecond = "AUTOMATIC_BUILD_INFO_SECOND";
+const std::string _MacroBuildHour = "BUILD_INFO_GENERATOR_HOUR";
+const std::string _MacroBuildMinute = "BUILD_INFO_GENERATOR_MINUTE";
+const std::string _MacroBuildSecond = "BUILD_INFO_GENERATOR_SECOND";
 
 // File header to write (UTF-8)
 const std::string _FileHeader =
@@ -42,44 +42,30 @@ u8"/*  All modifications to this file                                  */\n" \
 u8"/*  will be replaced on next run.                                   */\n" \
 u8"/********************************************************************/\n\n" \
 u8"#pragma once\n\n" \
-u8"// To pause updating this file, set \"" + _MacroPause + "\" to \"1\".\n" \
+u8"// To disable updates to this file, set \"" + _MacroPause + "\" to \"1\".\n" \
 u8"#define " + _MacroPause + " 0\n\n" \
 u8"// Generated info\n";
 
 
-// Helper enum for "SearchAndParseMacroInCurrentLine" function
-enum class ReturnCode : uint8_t
+// Parse the macro in the current line
+bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size_t& startPoint, uint64_t& parsedIntegerOut)
 {
-	NotFound = 0,
-	ParseError = 1,
-	Success = 2
-};
-
-// Search if "macroName" is in "currentLine", if yes parses the macro value to an integer.
-ReturnCode SearchAndParseMacroInCurrentLine(const std::string& currentLine, const std::string_view& macroNameView, uint64_t& parsedIntegerOut)
-{
-	// Search if macro name is in the line
-	const size_t macroNamePos = currentLine.find(macroNameView);
-	if (macroNamePos == std::string::npos)
-		return ReturnCode::NotFound; // Not found, return
-
-	// Macro found
-	// Search for first space after macro name, beginning at first char of macro name. The number begins after the found space
-	const size_t spacePos = currentLine.find(' ', macroNamePos);
+	// Search for first space beginning at first char of macro name (startPoint). The number begins after the found space
+	const size_t spacePos = currentLineView.find(' ', startPoint);
 	if (spacePos == std::string::npos)
 	{
 		// Space not found
-		std::cout << "[ERROR]: Unknown Syntax after \"" << macroNameView << "\"! Expected a space. File corrupted?" << std::endl;
-		return ReturnCode::ParseError;
+		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a space. File corrupted?" << std::endl;
+		return false;
 	}
 
 	// Get the number (it begins one char after found space until end of line)
-	std::string numberString = currentLine.substr(spacePos + 1);
+	std::string numberString = currentLineView.substr(spacePos + 1).data();
 	if (numberString == "")
 	{
 		// No value found
-		std::cout << "[ERROR]: Unknown Syntax after \"" << macroNameView << "\"! Expected a value. File corrupted?" << std::endl;
-		return ReturnCode::ParseError;
+		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a value. File corrupted?" << std::endl;
+		return false;
 	}
 
 	// Remove \n or \r at the end of line
@@ -91,15 +77,15 @@ ReturnCode SearchAndParseMacroInCurrentLine(const std::string& currentLine, cons
 		parsedIntegerOut = std::stoull(numberString);
 	}
 	catch (...) {
-		std::cout << "[ERROR]: Could not parse macro value! Conversion failed. File corrupted?" << std::endl;
-		return ReturnCode::ParseError;
+		std::cout << "[ERROR]: Could not parse value of \"" << currentLineView.substr(startPoint) << "\". File corrupted ? " << std::endl;
+		return false;
 	}
 
-	return ReturnCode::Success;
+	return true;
 }
 
-// Read a build info file and return the parsed information
-bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNumberOut, bool& pauseOut)
+// Read a build info file and return the parsed information. The function aborts when a macro cannot be parsed
+bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNumberOut, bool& pauseEnabledOut)
 {
 	// Open file
 	std::ifstream buildInfoFile(filenameView);
@@ -111,81 +97,77 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 	}
 
 	// Read file
-	bool		buildNumberMacroFoundAndParsed = false;
-	bool		pauseMacroFoundAndParsed = false;
-
-	uint64_t	parsedBuildNumber = 0;
-	uint64_t	parsedPauseValue = 0;
-
+	std::pair<bool, uint64_t> macroBuildNumberResult(false, 0); // (found, data)
+	std::pair<bool, uint64_t> macroPauseResult(false, 0); // (found, data)
 	std::string currentLine = "";
+
 	while (std::getline(buildInfoFile, currentLine)) // Read file line by line
 	{
 		// Skip all empty lines and lines that don't start with '#'
 		if (currentLine.size() == 0 || currentLine[0] != '#')
 			continue;
 
-		// Search and parse _MacroBuildNumber (only if it wasn't found yet)
-		if (!buildNumberMacroFoundAndParsed)
+		// Search for build number macro in current line if it was not found yet
+		if (!macroBuildNumberResult.first) // Already found?
 		{
-			const ReturnCode ret = SearchAndParseMacroInCurrentLine(currentLine, _MacroBuildNumber, parsedBuildNumber);
+			const size_t macroNameStartPoint = currentLine.find(_MacroBuildNumber);
+			if (macroNameStartPoint != std::string::npos)
+			{
+				// Macro found, try to parse it
+				if (!ParseMacroInCurrentLine(currentLine, macroNameStartPoint, macroBuildNumberResult.second))
+				{
+					// Parse failed, error message got printed inside function
+					buildInfoFile.close();
+					return false;
+				}
 
-			if (ret == ReturnCode::Success)
-			{
-				// Successfully found parsed the macro
-				buildNumberMacroFoundAndParsed = true;
+				// Macro found and parsed successfully
+				macroBuildNumberResult.first = true;
 			}
-			else if (ret == ReturnCode::ParseError)
-			{
-				// Error while parsing found macro name. Abort current parsing and exit
-				buildInfoFile.close();
-				return false;
-			} // Do nothing on "not found", go to next line
 		}
 
-		// Search and parse _MacroPause (only if it wasn't found yet)
-		if (!pauseMacroFoundAndParsed)
+		// Search for pause macro in current line if it was not found yet
+		if (!macroPauseResult.first)
 		{
-			const ReturnCode ret = SearchAndParseMacroInCurrentLine(currentLine, _MacroPause, parsedPauseValue);
+			const size_t macroNameStartPoint = currentLine.find(_MacroPause);
+			if (macroNameStartPoint != std::string::npos)
+			{
+				// Macro found, try to parse it
+				if (!ParseMacroInCurrentLine(currentLine, macroNameStartPoint, macroPauseResult.second))
+				{
+					// Parse failed, error message got printed inside function
+					buildInfoFile.close();
+					return false;
+				}
 
-			if (ret == ReturnCode::Success)
-			{
-				// Successfully parsed the macro
-				pauseMacroFoundAndParsed = true;
+				// Macro found and parsed successfully
+				macroPauseResult.first = true;
 			}
-			else if (ret == ReturnCode::ParseError)
-			{
-				// Error while parsing found macro name. Abort current parsing and exit
-				buildInfoFile.close();
-				return false;
-			} // Do nothing on "not found", go to next line
 		}
 
-		// Break loop when both macros are found, since there is no point in searching any further
-		if (buildNumberMacroFoundAndParsed && pauseMacroFoundAndParsed)
+		// Break loop when both macros are found and parsed, since there are not more than those two macros
+		if (macroBuildNumberResult.first && macroPauseResult.first)
 			break;
 	}
 
 	// Close the file
 	buildInfoFile.close();
 
-	// Check if build number macro was found and parsed. This macro is needed, however the pause macro is optional.
-	if (buildNumberMacroFoundAndParsed)
+	// Check if build number macro was found (necessary)
+	if (!macroBuildNumberResult.first)
 	{
-		// Output build number
-		buildNumberOut = parsedBuildNumber;
-	}
-	else
-	{
-		// Build number macro not found, file may be corrupted
 		std::cout << "[ERROR]: Macro \"" << _MacroBuildNumber << "\" not found! File corrupted?" << std::endl;
 		return false;
 	}
 
-	// Check if optional pause macro was found, if not assume pause is disabled
-	if (pauseMacroFoundAndParsed)
-		pauseOut = parsedPauseValue == 0 ? false : true;
+	// Set output value
+	buildNumberOut = macroBuildNumberResult.second;
+
+	// Check if pause macro was found (optional). If not, set pause to disabled
+	if (macroPauseResult.first)
+		pauseEnabledOut = macroPauseResult.second == 0 ? false : true;
 	else
-		pauseOut = false;
+		pauseEnabledOut = false;
 
 	return true;
 }
@@ -249,7 +231,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& b
 	buildInfoFile.write(assembledMacros.data(), assembledMacros.size());
 
 	// Write EOF signal
-	const std::string eofSignal = u8"/*----------------- End of generated file -----------------*/\n";
+	const std::string eofSignal = u8"/********************** End of generated file **********************/\n";
 	buildInfoFile.write(eofSignal.data(), eofSignal.size());
 
 	// Check if write succeeded
@@ -292,7 +274,7 @@ std::vector<std::wstring> GetCommandLineArguments()
 
 int main()
 {
-	std::cout << "AutomaticBuildNumber: ";
+	std::cout << "Build Info Generator: ";
 
 	// Get command line arguments
 	const std::vector<std::wstring> commandArguments = GetCommandLineArguments();
