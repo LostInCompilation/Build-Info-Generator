@@ -73,13 +73,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="src\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="BuildInfoGenerator.rc" />
+    <ResourceCompile Include="resource\BuildInfoGenerator.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon\Icon256.ico" />

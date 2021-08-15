@@ -15,17 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
+    <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="BuildInfoGenerator.rc">
+    <ResourceCompile Include="resource\BuildInfoGenerator.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -33,5 +28,10 @@
     <Image Include="icon\Icon256.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
