@@ -272,10 +272,43 @@ std::vector<std::wstring> GetCommandLineArguments()
 	return commandArguments;
 }
 
-// Parse all command line arguments and output result
-bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, std::wstring& filenameOut, bool& enableTimeOut, bool& resetOut)
+// Print help text about command line arguments
+void PrintHelpText()
 {
+	std::cout << std::endl << "Usage:" << std::endl;
+	std::cout << "	A" << std::endl;
+	std::cout << "	B" << std::endl;
+	std::cout << "	C" << std::endl;
+	std::cout << "	D" << std::endl;
+}
 
+// Parse all command line arguments and output result
+bool ParseCommandLineArguments(std::vector<std::wstring> arguments, std::wstring& filenameOut, bool& enableTimeOut, bool& resetOut)
+{
+	if (arguments.size() <= 1)
+	{
+		// No user arguments passed, only executable path from OS. Show help
+		std::cout << "No command line arguments specified!" << std::endl;
+
+		PrintHelpText();
+		return false;
+	}
+
+	// Vector is guaranteed to have at least two elements. Get the second element (filename) directly, because it's required
+	filenameOut = arguments[1];
+
+	// Check if additional user arguments are present
+	if (arguments.size() <= 2)
+		return true; // No additional arguments present
+
+	// Remove first argument (executable path from OS), since it's not needed
+	arguments.erase(arguments.begin());
+
+	// Parse all optional user arguments one by one
+	for (const auto& arg : arguments)
+	{
+
+	}
 
 	return true;
 }
@@ -288,11 +321,12 @@ int main()
 	// Get command line arguments
 	const std::vector<std::wstring> commandArguments = GetCommandLineArguments();
 
-	if (commandArguments.size() < 2)
-	{
-		std::cout << "Wrong command line arguments specified! Usage: AutomaticBuildNumber.exe \"target_file\" [/time]" << std::endl;
-		return -1;
-	}
+	// Parse user arguments
+	if (ParseCommandLineArguments(commandArguments, filename, enableTime, reset))
+		return -1; // Parse failed, error message got print inside function
+
+
+
 
 	// Parse arguments. No advanced parser needed, because only one additional argument is supported
 	const std::wstring filename = commandArguments[1]; // Get filename
