@@ -1,20 +1,28 @@
 # Build Info Generator
 
+**Note: This file will be updated in the next days.**
+
+
 ## Contents
-- Description
-- Features
-- How to use
+
+- [Description](#description)
+- [Features](#features)
+- [How to use it](#how-to-use-it)
+- [Sample file](#sample-file)
+
+*See also: [License](#LICENSE.md)*
+
 
 ## Description
-
-**Note: This file will be updated in the next days.**
 
 A simple tool to auto generate a header file containing the current build number and the current build date and time.
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
 See [instructions](#Instructions) below for usage.
 
+
 ## Features
+
 - Build number counter
 - Optional time and date of build
 - Full Unicode support for paths / filenames
@@ -24,9 +32,10 @@ See [instructions](#Instructions) below for usage.
 - e
 
 
-## Instructions
+## How to use it
 
-Instr.
+ToDo: Add instructions.
+
 
 ## Sample file
 
@@ -51,9 +60,9 @@ Instr.
 #define BUILD_INFO_GENERATOR_MONTH 08
 #define BUILD_INFO_GENERATOR_YEAR 2021
 
-#define BUILD_INFO_GENERATOR_HOUR 03
-#define BUILD_INFO_GENERATOR_MINUTE 36
-#define BUILD_INFO_GENERATOR_SECOND 58
+#define BUILD_INFO_GENERATOR_HOUR 11
+#define BUILD_INFO_GENERATOR_MINUTE 40
+#define BUILD_INFO_GENERATOR_SECOND 05
 
 /********************** End of generated file **********************/
 ~~~
