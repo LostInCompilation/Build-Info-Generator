@@ -16,12 +16,4 @@
 // Generated info
 #define BUILD_INFO_GENERATOR_BUILD_NUMBER 0
 
-#define BUILD_INFO_GENERATOR_DAY 15
-#define BUILD_INFO_GENERATOR_MONTH 08
-#define BUILD_INFO_GENERATOR_YEAR 2021
-
-#define BUILD_INFO_GENERATOR_HOUR 06
-#define BUILD_INFO_GENERATOR_MINUTE 10
-#define BUILD_INFO_GENERATOR_SECOND 06
-
 /********************** End of generated file **********************/

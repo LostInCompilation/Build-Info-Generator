@@ -48,7 +48,7 @@ u8"// Generated info\n";
 
 
 // Parse the macro in the current line
-bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size_t& startPoint, uint64_t& parsedIntegerOut)
+bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size_t& startPoint, uint64_t& parsedInteger_out)
 {
 	// Search for first space beginning at first char of macro name (startPoint). The number begins after the found space
 	const size_t spacePos = currentLineView.find(' ', startPoint);
@@ -74,7 +74,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 
 	// Try converting the string to integer
 	try {
-		parsedIntegerOut = std::stoull(numberString);
+		parsedInteger_out = std::stoull(numberString);
 	}
 	catch (...) {
 		std::cout << "[ERROR]: Could not parse value of \"" << currentLineView.substr(startPoint) << "\". File may be damaged." << std::endl;
@@ -85,7 +85,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 }
 
 // Read a build info file and return the parsed information. The function aborts when a macro cannot be parsed
-bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNumberOut, bool& pauseEnabledOut)
+bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNumber_out, bool& pauseEnabled_out)
 {
 	// Open file
 	std::ifstream buildInfoFile(filenameView);
@@ -161,13 +161,13 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 	}
 
 	// Set output value
-	buildNumberOut = macroBuildNumberResult.second;
+	buildNumber_out = macroBuildNumberResult.second;
 
 	// Check if pause macro was found (optional). If not, set pause to disabled
 	if (macroPauseResult.first)
-		pauseEnabledOut = macroPauseResult.second == 0 ? false : true;
+		pauseEnabled_out = macroPauseResult.second == 0 ? false : true;
 	else
-		pauseEnabledOut = false;
+		pauseEnabled_out = false;
 
 	return true;
 }
@@ -210,7 +210,7 @@ std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableT
 	return assembled;
 }
 
-// Writes a build info file (UTF-8)
+// Write a build info file (UTF-8)
 bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& buildNumber, const bool& enableTime)
 {
 	// Open file
@@ -272,65 +272,64 @@ std::vector<std::wstring> GetCommandLineArguments()
 	return commandArguments;
 }
 
-// Print help text about command line arguments
+// Print help text for command line arguments
 void PrintHelpText()
 {
 	std::cout << std::endl << "Usage:" << std::endl;
-	std::cout << "	A" << std::endl;
-	std::cout << "	B" << std::endl;
-	std::cout << "	C" << std::endl;
-	std::cout << "	D" << std::endl;
+	std::cout << "		A" << std::endl;
+	std::cout << "		B" << std::endl;
+	std::cout << "		C" << std::endl;
+	std::cout << "		D" << std::endl << std::endl;
 }
 
-// Parse all command line arguments and output result. Returns false if application should exit
-bool ParseCommandLineArguments(std::vector<std::wstring> arguments, std::wstring& filenameOut, bool& enableTimeOut, bool& resetOut)
+// Parse all command line arguments and output results. Returns false if parsing failed
+bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHelp_out, std::wstring& filename_out, bool& enableTime_out, bool& reset_out)
 {
 	// Set output values to default state
-	filenameOut = L"";
-	enableTimeOut = false;
-	resetOut = false;
+	filename_out = L"";
+	showHelp_out = false;
+	enableTime_out = false;
+	reset_out = false;
 
 	// Check for at least one user argument
 	if (arguments.size() <= 1)
 	{
-		// No user arguments passed, only executable path from OS. Show help
-		std::cout << "No command line arguments specified!" << std::endl;
-
-		PrintHelpText();
+		// No user arguments passed, only executable path from OS
+		std::cout << "[ERROR]: No command line arguments specified!" << std::endl;
 		return false;
 	}
 
-	// Check if only one user argument is present
-	if (arguments.size() == 2)
-	{
-		// Is the only argument "/help"?
-		if (arguments[1] == L"/help")
-		{
-			PrintHelpText();
-			return false;
-		}
-		else
-		{
-			// Argument should be the filename
-			filenameOut = arguments[1];
-			return true;
-		}
-	}
-
-	// Vector is guaranteed to have at least two elements. Get the second element (filename) directly, because it's required
-	filenameOut = arguments[1];
-
-	// Check if additional user arguments are present
-	if (arguments.size() <= 2)
-		return true; // No additional arguments present
-
-	// Remove first argument (executable path from OS), since it's not needed
+	// Erase first argument (executable path passed by OS), since it's not needed
 	arguments.erase(arguments.begin());
 
-	// Parse all optional user arguments one by one
+	// Parse all arguments one by one
+	bool filenameParsed = false;
 	for (const auto& arg : arguments)
 	{
+		if (arg == L"/help")
+		{
+			showHelp_out = true;
+		}
+		else if (arg == L"/reset")
+		{
+			reset_out = true;
+		}
+		else if (arg == L"/time")
+		{
+			enableTime_out = true;
+		}
+		else // Should be filename
+		{
+			// If filename got already parsed, this is an unexpected argument
+			if (filenameParsed)
+			{
+				std::wcout << L"[ERROR]: Unexpected argument: \"" << arg << L"\"" << std::endl;
+				return false;
+			}
 
+			filename_out = arg;
+			filenameParsed = true;
+		}
 	}
 
 	return true;
@@ -346,33 +345,46 @@ int main()
 
 	// Parse user arguments
 	std::wstring	filename = L"";
+	bool			showHelp = false;
 	bool			enableTime = false;
 	bool			reset = false;
 
-	if (!ParseCommandLineArguments(commandArguments, filename, enableTime, reset))
-		return -1; // Parse failed, error message got print inside function
-
-
-
-
-	// Parse arguments. No advanced parser needed, because only one additional argument is supported
-	const std::wstring filename = commandArguments[1]; // Get filename
-	bool enableTime = false;
-
-	// Check for time switch [/time]
-	if (commandArguments.size() > 2)
+	if (!ParseCommandLineArguments(commandArguments, showHelp, filename, enableTime, reset))
 	{
-		if (commandArguments[2] == L"/time")
-			enableTime = true;
+		// Parse failed (message got print inside function), show help and exit
+		PrintHelpText();
+		return -1;
+	}
+
+	// If "/help" argument is specified, ignore all other arguments and only show help text
+	if (showHelp)
+	{
+		std::cout << std::endl;
+		PrintHelpText();
+
+		return 0;
+	}
+
+	// Check if filename is specified. Needed for all other arguments
+	if (filename == L"")
+	{
+		std::cout << "[ERROR]: No filename specified!" << std::endl;
+		return -1;
 	}
 
 	// Print update
 	std::cout << "Generating... ";
 
-	// Check if file already exists
-	if (std::filesystem::exists(filename))
+	// Check if "/reset" is specified or file doesn't exist yet
+	if (reset || !std::filesystem::exists(filename))
 	{
-		// File found
+		// Create new file
+		if (!WriteBuildInfoFile(filename, 0, enableTime))
+			return -1; // Write failed, error message got printed inside function
+	}
+	else
+	{
+		// File exists and should be updated (no reset)
 		uint64_t buildNumber = 0;
 		bool pauseUpdates = false;
 
@@ -393,12 +405,6 @@ int main()
 
 		// Write updated file
 		if (!WriteBuildInfoFile(filename, buildNumber, enableTime))
-			return -1; // Write failed, error message got printed inside function
-	}
-	else
-	{
-		// File does not exist. Create new file with build number zero
-		if (!WriteBuildInfoFile(filename, 0, enableTime))
 			return -1; // Write failed, error message got printed inside function
 	}
 
