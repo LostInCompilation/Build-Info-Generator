@@ -8,6 +8,9 @@
 /*		     Updated 2021, original version from 2019				*/
 /********************************************************************/
 
+// ToDo: Add license
+
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -279,11 +282,12 @@ void PrintHelpText()
 	std::cout << "	BuildInfoGenerator [/h | /help] | ([/time] [/reset] \"filename\")" << std::endl << std::endl;
 
 	std::cout << "OPTIONS:" << std::endl;
-	std::cout << "	/h, /help		Display this help message." << std::endl;
-	std::cout << "	/time			Write build time and date to generated file." << std::endl;
-	std::cout << "	/reset			Reset the generated file and set the BuildNumber back to 0." << std::endl << std::endl;
+	std::cout << "	/h, /help	Display this help message." << std::endl;
+	std::cout << "	/time		Write build time and date to generated file." << std::endl;
+	std::cout << "	/reset		Reset the generated file and set the BuildNumber back to 0." << std::endl << std::endl;
 }
 
+// ToDO: Add /out parameter followed by filename to prevent accidental file creation at "/he" for example
 // Parse all command line arguments and output results. Returns false if parsing failed
 bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHelp_out, std::wstring& filename_out, bool& enableTime_out, bool& reset_out)
 {
