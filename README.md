@@ -1,8 +1,5 @@
 # Build Info Generator
 
-**Note: This file will be updated in the next days. Please be patient :)**
-
-
 ## Contents
 
 - [Description](#description)
