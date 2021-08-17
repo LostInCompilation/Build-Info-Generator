@@ -1,6 +1,6 @@
 # Build Info Generator
 
-**Note: This file will be updated in the next days.**
+**Note: This file will be updated in the next days. Please be patient :)**
 
 
 ## Contents
@@ -8,33 +8,50 @@
 - [Description](#description)
 - [Features](#features)
 - [How to use it](#how-to-use-it)
+  - [Command line interface](#command-line-interface)
+  - [Integrating in Visual Studio](#integrating-in-visual-studio)
 - [Sample file](#sample-file)
 
-*See also: [License](#LICENSE.md)*
+*See also: [License](LICENSE.md)*
 
 
 ## Description
 
-A simple tool to auto generate a header file containing the current build number and the current build date and time.
+A simple command line tool to auto generate a header file containing the current build number and the current build date and time.
+It can be easily integrated in almost any IDE, which supports custom pre-build events (a command that gets called before building starts).
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
-See [instructions](#Instructions) below for usage.
+See [instructions](#how-to-use-it) below for usage and how to include the tool in your Visual Studio project.
 
 
 ## Features
 
+- Simple command line tool to integrate in your IDE's build process
 - Build number counter
 - Optional time and date of build
 - Full Unicode support for paths / filenames
-- c
-  - cc
-  - cd
-- e
+- No need to build it yourself, compiled executable can be found [here](x64/Release/BuildInfoGenerator.exe)
 
 
 ## How to use it
 
-ToDo: Add instructions.
+### Command line interface
+
+~~~
+Usage:
+    BuildInfoGenerator [/h | /help] | ([/time] [/reset] /out "file")
+
+Options:
+    /h, /help        Display this help message.
+    /time            Write build time and date to generated file.
+    /reset           Reset the generated file and set the build number
+                     back to zero.
+    /out "file"      Specify the output file.
+~~~
+
+### Integrating in Visual Studio
+
+ToDo
 
 
 ## Sample file
