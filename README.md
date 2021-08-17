@@ -20,6 +20,8 @@ A simple command line tool to auto generate a header file containing an incremen
 It can be easily integrated into almost any IDE, which supports custom pre-build events (a command that gets called before compilation starts).
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
+In the future constexpr globals will be supported besides macros.
+
 See [instructions](#how-to-use-it) below for usage and how to include the tool in your Visual Studio project.
 
 
@@ -86,15 +88,18 @@ ToDo - Coming soon
 #define BUILD_INFO_GENERATOR_PAUSE 0
 
 // Generated info
-#define BUILD_INFO_GENERATOR_BUILD_NUMBER 0
+#define BUILD_INFO_GENERATOR_BUILD_NUMBER 1
 
-#define BUILD_INFO_GENERATOR_DAY 16
+#define BUILD_INFO_GENERATOR_DAY 17
 #define BUILD_INFO_GENERATOR_MONTH 08
 #define BUILD_INFO_GENERATOR_YEAR 2021
+#define BUILD_INFO_GENERATOR_DATE_STR "17.08.2021"
 
-#define BUILD_INFO_GENERATOR_HOUR 11
-#define BUILD_INFO_GENERATOR_MINUTE 40
-#define BUILD_INFO_GENERATOR_SECOND 05
+#define BUILD_INFO_GENERATOR_HOUR 06
+#define BUILD_INFO_GENERATOR_MINUTE 47
+#define BUILD_INFO_GENERATOR_SECOND 26
+
+#define BUILD_INFO_GENERATOR_TIME_STR "06:47:26"
 
 /********************** End of generated file **********************/
 ~~~

@@ -32,7 +32,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -50,10 +49,12 @@ const std::string _MacroBuildNumber = "BUILD_INFO_GENERATOR_BUILD_NUMBER";
 const std::string _MacroBuildDay = "BUILD_INFO_GENERATOR_DAY";
 const std::string _MacroBuildMonth = "BUILD_INFO_GENERATOR_MONTH";
 const std::string _MacroBuildYear = "BUILD_INFO_GENERATOR_YEAR";
+const std::string _MacroBuildDateString = "BUILD_INFO_GENERATOR_DATE_STR";
 
 const std::string _MacroBuildHour = "BUILD_INFO_GENERATOR_HOUR";
 const std::string _MacroBuildMinute = "BUILD_INFO_GENERATOR_MINUTE";
 const std::string _MacroBuildSecond = "BUILD_INFO_GENERATOR_SECOND";
+const std::string _MacroBuildTimeString = "BUILD_INFO_GENERATOR_TIME_STR";
 
 // File header to write (UTF-8)
 const std::string _FileHeader =
@@ -208,9 +209,7 @@ std::string ToStringFixedWidth(const int64_t& integer, const uint8_t& width = 2)
 std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableTime)
 {
 	// Assemble string
-	std::string assembled = u8"";
-
-	assembled += u8"#define " + _MacroBuildNumber + u8" " + std::to_string(buildNumber) + u8"\n\n";
+	std::string assembled = u8"#define " + _MacroBuildNumber + u8" " + std::to_string(buildNumber) + u8"\n\n";
 
 	if (enableTime)
 	{
@@ -223,11 +222,15 @@ std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableT
 		// Write time and date
 		assembled += u8"#define " + _MacroBuildDay + u8" " + ToStringFixedWidth(tm.tm_mday) + u8"\n";
 		assembled += u8"#define " + _MacroBuildMonth + u8" " + ToStringFixedWidth(tm.tm_mon + 1LL) + u8"\n";
-		assembled += u8"#define " + _MacroBuildYear + u8" " + ToStringFixedWidth(tm.tm_year + 1900LL) + u8"\n\n";
+		assembled += u8"#define " + _MacroBuildYear + u8" " + ToStringFixedWidth(tm.tm_year + 1900LL) + u8"\n";
+		assembled += u8"#define " + _MacroBuildDateString + u8" \"" + ToStringFixedWidth(tm.tm_mday) + u8"." +
+			ToStringFixedWidth(tm.tm_mon + 1LL) + u8"." + ToStringFixedWidth(tm.tm_year + 1900LL) + u8"\"\n\n";
 
 		assembled += u8"#define " + _MacroBuildHour + u8" " + ToStringFixedWidth(tm.tm_hour) + u8"\n";
 		assembled += u8"#define " + _MacroBuildMinute + u8" " + ToStringFixedWidth(tm.tm_min) + u8"\n";
 		assembled += u8"#define " + _MacroBuildSecond + u8" " + ToStringFixedWidth(tm.tm_sec) + u8"\n\n";
+		assembled += u8"#define " + _MacroBuildTimeString + u8" \"" + ToStringFixedWidth(tm.tm_hour) + u8":" +
+			ToStringFixedWidth(tm.tm_min) + u8":" + ToStringFixedWidth(tm.tm_sec) + u8"\"\n\n";
 	}
 
 	return assembled;
