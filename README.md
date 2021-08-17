@@ -61,6 +61,12 @@ Options:
     /out "file"      Specify the output file (relative or absolute).
 ~~~
 
+Example to generate or update a file ("BuildInfo.h") with incrementing build number and build time and date.
+If the file already exists, it's build number will be increased.
+~~~
+BuildInfoGenerator /time /out "BuildInfo.h"
+~~~
+
 ### Integrating in Visual Studio
 
 ToDo - Coming soon
