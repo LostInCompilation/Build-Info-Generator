@@ -19,8 +19,8 @@
 
 ## Description
 
-A simple command line tool to auto generate a header file containing the current build number and the current build date and time.
-It can be easily integrated in almost any IDE, which supports custom pre-build events (a command that gets called before building starts).
+A simple command line tool to auto generate a header file containing an incrementing build number and the current build date and time.
+It can be easily integrated into almost any IDE, which supports custom pre-build events (a command that gets called before compilation starts).
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
 See [instructions](#how-to-use-it) below for usage and how to include the tool in your Visual Studio project.
