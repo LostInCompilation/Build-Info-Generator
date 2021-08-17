@@ -9,6 +9,7 @@
 - [Features](#features)
 - [Download](#download)
 - [How to use it](#how-to-use-it)
+  - [General](#general)
   - [Command line interface](#command-line-interface)
   - [Integrating in Visual Studio](#integrating-in-visual-studio)
 - [Sample file](#sample-file)
@@ -42,6 +43,10 @@ Needs the Visual Studio 2019 C++ runtime (vc_redist.x64.exe). Get it [from Micro
 
 ## How to use it
 
+### General
+
+ToDo: General explanation
+
 ### Command line interface
 
 ~~~
@@ -53,7 +58,7 @@ Options:
     /time            Write build time and date to generated file.
     /reset           Reset the generated file and set the build number
                      back to zero.
-    /out "file"      Specify the output file.
+    /out "file"      Specify the output file (relative or absolute).
 ~~~
 
 ### Integrating in Visual Studio

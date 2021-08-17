@@ -32,7 +32,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// ToDo: Maybe add check for relative/absolute file and convert it always to absolute?
 
 #include <iostream>
 #include <fstream>
@@ -273,7 +272,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& b
 	return true;
 }
 
-// Get the arguments as wide strings (UTF16)
+// Get the arguments as wide strings (UTF-16)
 std::vector<std::wstring> GetCommandLineArguments()
 {
 	// Get arguments as Unicode UTF16
@@ -308,14 +307,14 @@ void PrintHelpText()
 	std::cout << "  /time            Write build time and date to generated file." << std::endl;
 	std::cout << "  /reset           Reset the generated file and set the build number" << std::endl;
 	std::cout << "                   back to zero." << std::endl;
-	std::cout << "  /out \"file\"      Specify the output file." << std::endl << std::endl;
+	std::cout << "  /out \"file\"      Specify the output file (relative or absolute)." << std::endl << std::endl;
 }
 
 // Parse all command line arguments and output results. Return false if parsing failed.
-bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHelp_out, std::wstring& filename_out, bool& enableTime_out, bool& reset_out)
+bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHelp_out, std::filesystem::path& filepath_out, bool& enableTime_out, bool& reset_out)
 {
 	// Set output values to default state
-	filename_out = L"";
+	filepath_out = L"";
 	showHelp_out = false;
 	enableTime_out = false;
 	reset_out = false;
@@ -366,7 +365,7 @@ bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHe
 				return false;
 			}
 
-			filename_out = arguments[i + 1];
+			filepath_out = arguments[i + 1];
 
 			// Skip next argument (filename), it got already parsed here
 			i++;
@@ -400,12 +399,12 @@ int main()
 	const std::vector<std::wstring> commandArguments = GetCommandLineArguments();
 
 	// Parse user arguments
-	std::wstring	filename = L"";
+	std::filesystem::path	filepath = L"";
 	bool			showHelp = false;
 	bool			enableTime = false;
 	bool			reset = false;
 
-	if (!ParseCommandLineArguments(commandArguments, showHelp, filename, enableTime, reset))
+	if (!ParseCommandLineArguments(commandArguments, showHelp, filepath, enableTime, reset))
 	{
 		// Parse failed (message got print inside function), show help and exit
 		PrintHelpText();
@@ -421,8 +420,11 @@ int main()
 		return 0;
 	}
 
+	// Make path absolute
+	filepath = std::filesystem::absolute(filepath);
+
 	// Check if filename is a directory
-	if (std::filesystem::is_directory(filename))
+	if (std::filesystem::is_directory(filepath))
 	{
 		std::cout << "[ERROR]: Filename is an existing directory! Please specify a file." << std::endl;
 		return -1;
@@ -432,10 +434,10 @@ int main()
 	std::cout << "Generating... ";
 
 	// Check if "/reset" is specified or file doesn't exist yet
-	if (reset || !std::filesystem::exists(filename))
+	if (reset || !std::filesystem::exists(filepath))
 	{
 		// Create new file
-		if (!WriteBuildInfoFile(filename, 0, enableTime))
+		if (!WriteBuildInfoFile(filepath.wstring(), 0, enableTime))
 			return -1; // Write failed, error message got printed inside function
 	}
 	else
@@ -445,7 +447,7 @@ int main()
 		bool pauseUpdates = false;
 
 		// Read build info from file
-		if (!ReadBuildInfoFile(filename, buildNumber, pauseUpdates))
+		if (!ReadBuildInfoFile(filepath.wstring(), buildNumber, pauseUpdates))
 			return -1; // Read failed, error message got printed inside function
 
 		// Check if pause macro is enabled
@@ -460,7 +462,7 @@ int main()
 		buildNumber++;
 
 		// Write updated file
-		if (!WriteBuildInfoFile(filename, buildNumber, enableTime))
+		if (!WriteBuildInfoFile(filepath.wstring(), buildNumber, enableTime))
 			return -1; // Write failed, error message got printed inside function
 	}
 
