@@ -7,6 +7,7 @@
 
 - [Description](#description)
 - [Features](#features)
+- [Download](#download)
 - [How to use it](#how-to-use-it)
   - [Command line interface](#command-line-interface)
   - [Integrating in Visual Studio](#integrating-in-visual-studio)
@@ -33,6 +34,11 @@ See [instructions](#how-to-use-it) below for usage and how to include the tool i
 - Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([Show sample file](#sample-file))
 - No need to build it yourself, compiled executable can be found [here](x64/Release/BuildInfoGenerator.exe)
 
+## Download
+
+You can download a prebuilt executable [here](x64/Release/BuildInfoGenerator.exe).
+
+Needs the Visual Studio 2019 C++ runtime (vc_redist.x64.exe). Get it [from Microsoft](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
 
 ## How to use it
 
@@ -52,7 +58,7 @@ Options:
 
 ### Integrating in Visual Studio
 
-ToDo
+ToDo - Coming soon
 
 
 ## Sample file
