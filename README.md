@@ -30,6 +30,7 @@ See [instructions](#how-to-use-it) below for usage and how to include the tool i
 - Build number counter
 - Optional time and date of build
 - Full Unicode support for paths / filenames
+- Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([Show sample file](#sample-file))
 - No need to build it yourself, compiled executable can be found [here](x64/Release/BuildInfoGenerator.exe)
 
 
