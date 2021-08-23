@@ -17,7 +17,7 @@
 ## Description
 
 A simple command line tool to auto generate a header file containing an incrementing build number and the current build date and time.
-It can be easily integrated into almost any IDE, which supports custom pre-build events (a command that gets called before compilation starts).
+It can be easily integrated into almost any IDE, which supports custom prebuild events (a command that gets called before compilation starts).
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
 In the future constexpr globals will be supported besides macros.

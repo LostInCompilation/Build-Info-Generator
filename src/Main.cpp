@@ -1,15 +1,5 @@
-﻿/********************************************************************/
-/*                                                                  */
-/*                      (C) 2021 Marc Schöndorf                     */
-/*                            See license                           */
-/*                                                                  */
-/*  Automatically creates a header file with                        */
-/*  incrementing build number and time info                         */
-/********************************************************************/
-/*          Reworked 2021, original version from 2019.              */
-/********************************************************************/
-/*
-**MIT License**
+﻿/*
+MIT License
 
 Copyright (c) 2021 Marc Schöndorf
 
@@ -31,6 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+/********************************************************************/
+/*                                                                  */
+/*                      (C) 2021 Marc Schöndorf                     */
+/*                            See license                           */
+/*                                                                  */
+/*  Automatically creates a header file with                        */
+/*  incrementing build number and time info                         */
+/********************************************************************/
+/*          Reworked 2021, original version from 2019.              */
+/********************************************************************/
 
 #include <iostream>
 #include <fstream>
@@ -66,8 +67,8 @@ u8"/*  All modifications to this file                                  */\n" \
 u8"/*  will be replaced on next run.                                   */\n" \
 u8"/********************************************************************/\n\n" \
 u8"#pragma once\n\n" \
-u8"// To disable updates to this file, set \"" + _MacroPause + "\" to \"1\".\n" \
-u8"#define " + _MacroPause + " 0\n\n" \
+u8"// To disable updates to this file, set \"" + _MacroPause + u8R"(" to "1".)" + u8"\n" \
+u8"#define " + _MacroPause + u8" 0\n\n" \
 u8"// Generated info\n";
 
 
@@ -303,14 +304,14 @@ void PrintHelpText()
 {
 	std::cout << std::endl;
 	std::cout << "USAGE:" << std::endl;
-	std::cout << "  BuildInfoGenerator [/h | /help] | ([/time] [/reset] /out \"file\")" << std::endl << std::endl;
+	std::cout << R"(  BuildInfoGenerator [/h | /help] | ([/time] [/reset] /out "file"))" << std::endl << std::endl;
 
 	std::cout << "OPTIONS:" << std::endl;
 	std::cout << "  /h, /help        Display this help message." << std::endl;
 	std::cout << "  /time            Write build time and date to generated file." << std::endl;
 	std::cout << "  /reset           Reset the generated file and set the build number" << std::endl;
 	std::cout << "                   back to zero." << std::endl;
-	std::cout << "  /out \"file\"      Specify the output file (relative or absolute)." << std::endl << std::endl;
+	std::cout << R"(  /out "file"      Specify the output file (relative or absolute).)" << std::endl << std::endl;
 }
 
 // Parse all command line arguments and output results. Return false if parsing failed.
