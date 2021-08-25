@@ -8,16 +8,17 @@
 - [How to use it](#how-to-use-it)
   - [General](#general)
   - [Command line interface](#command-line-interface)
+    - [Example](#example)
   - [Integrating in Visual Studio](#integrating-in-visual-studio)
-- [Sample file](#sample-file)
+- [Generated sample file](#generated-sample-file)
 
-*See also: [License](LICENSE.md)*
+*See also: [License (MIT)](LICENSE.md)*
 
 
 ## Description
 
-A simple command line tool to auto generate a header file containing an incrementing build number and the current build date and time.
-It can be easily integrated into almost any IDE, which supports custom prebuild events (a command that gets called before compilation starts).
+A simple command line tool with permissive license (zlib) to auto generate a header file containing an incrementing build number and the current build date and time.
+It can be easily integrated into almost any IDE, which supports custom build events (a command that gets called before compilation in the IDE starts).
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
 
 In the future constexpr globals will be supported besides macros.
@@ -31,14 +32,17 @@ See [instructions](#how-to-use-it) below for usage and how to include the tool i
 - Build number counter
 - Optional time and date of build
 - Full Unicode support for paths / filenames
+- Generated file is UTF-8 encoded with or without BOM (See [Command line interface](#command-line-interface))
 - Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([show sample file](#sample-file))
 - No need to build it yourself, compiled executable can be found [here](x64/Release/BuildInfoGenerator.exe)
+
 
 ## Download
 
 You can download a prebuilt executable [here](x64/Release/BuildInfoGenerator.exe).
 
 Needs the Visual Studio 2019 C++ runtime (vc_redist.x64.exe). Get it [from Microsoft](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
+
 
 ## How to use it
 
@@ -50,28 +54,39 @@ ToDo: General explanation
 
 ~~~
 Usage:
-    BuildInfoGenerator [/h | /help] | ([/time] [/reset] /out "file")
+    BuildInfoGenerator [/h | /help] | ([/time] [/bom] [/reset] /out "file")
 
 Options:
     /h, /help        Display this help message.
     /time            Write build time and date to generated file.
     /reset           Reset the generated file and set the build number
                      back to zero.
+    /bom             Write UTF-8 BOM to output file.
     /out "file"      Specify the output file (relative or absolute).
 ~~~
 
-Example to generate or update a file ("BuildInfo.h") with incrementing build number and build time and date.
+#### Example
+
+Generate or update the file "BuildInfo.h" with incrementing build number and build time and date.
 If the file already exists, it's build number will be increased.
+The output file will be UTF-8 encoded, no matter if it contains a BOM or not (see /bom option).
 ~~~
-BuildInfoGenerator /time /out "BuildInfo.h"
+BuildInfoGenerator.exe /time /out "BuildInfo.h"
 ~~~
 
 ### Integrating in Visual Studio
 
-ToDo - Coming soon
+Simply add a Pre-Build-Command (you can use the above example command) to your project:
+
+> Right click on your project -> Properties -> Build Events -> Pre-Build Events -> Paste the command into "Command line".
+
+Do not forget to put the executable path and output file path into quotation marks if your path contains whitespaces:
+~~~
+"C:\A path\with\white spaces\BuildInfoGenerator.exe" /out "..\source code\BuildInfo.h"
+~~~
 
 
-## Sample file
+## Generated sample file
 
 ~~~cpp
 /********************************************************************/

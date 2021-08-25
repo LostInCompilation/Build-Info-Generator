@@ -1,7 +1,7 @@
 ﻿/*
 MIT License
 
-Copyright (c) 2021 Marc Schöndorf
+Copyright (c) 2019-2021 Marc Schöndorf
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 /********************************************************************/
 /*                                                                  */
-/*                      (C) 2021 Marc Schöndorf                     */
+/*                    (C) 2019-2021 Marc Schöndorf                  */
 /*                            See license                           */
 /*                                                                  */
 /*  Automatically creates a header file with                        */
@@ -32,6 +32,14 @@ SOFTWARE.
 /********************************************************************/
 /*          Reworked 2021, original version from 2019.              */
 /********************************************************************/
+
+// ToDo:
+//		-Store (boolean) results of parsed arguments inside an unordered_map<string, bool> instead of passing many arguments to every function.
+//		This is not important but is cleaner and more flexible if more command line arguments will be added.
+//
+//		-Optionally generate two sections (Debug, Release) in the output file to have different build info
+//		corresponding to the current configuration.
+
 
 #include <iostream>
 #include <fstream>
@@ -97,6 +105,14 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	numberString.erase(std::remove(numberString.begin(), numberString.end(), '\n'), numberString.end());
 	numberString.erase(std::remove(numberString.begin(), numberString.end(), '\r'), numberString.end());
 
+	// Check for minus sign in numberString, because std::stoull will happily convert negative numbers
+	if (numberString.find('-') != std::string::npos)
+	{
+		// No negative values allowed
+		std::cout << "[ERROR]: Negative values for \"" << currentLineView.substr(startPoint) << "\" are not allowed!" << std::endl;
+		return false;
+	}
+
 	// Try converting the string to integer
 	try {
 		parsedInteger_out = std::stoull(numberString);
@@ -119,6 +135,16 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 		// Not found, file may be corrupted or encoded
 		std::cout << "[ERROR]: File seems to exist but it could not be opened for reading!" << std::endl;
 		return false;
+	}
+
+	// Read first 3 bytes and check for UTF-8 BOM
+	unsigned char readBOM[3] = {};
+	buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
+
+	if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
+	{
+		// No BOM found, reset cursor to beginning
+		buildInfoFile.seekg(0);
 	}
 
 	// Read file
@@ -181,7 +207,7 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 	// Check if build number macro was found (necessary)
 	if (!macroBuildNumberResult.first)
 	{
-		std::cout << "[ERROR]: Macro \"" << _MacroBuildNumber << "\" not found! File may be damaged, try \"/reset\"." << std::endl;
+		std::cout << "[ERROR]: Macro \"" << _MacroBuildNumber << "\" not found! File may be damaged, try initializing it with \"/reset\"." << std::endl;
 		return false;
 	}
 
@@ -238,7 +264,7 @@ std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableT
 }
 
 // Write a build info file (UTF-8)
-bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& buildNumber, const bool& enableTime)
+bool WriteBuildInfoFile(const std::wstring_view& filenameView, const bool& writeBOM, const bool& enableTime, const uint64_t& buildNumber)
 {
 	// Open file
 	std::ofstream buildInfoFile(filenameView);
@@ -251,14 +277,21 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const uint64_t& b
 	// Assemble all macro defines and values as std::string for writing
 	const std::string assembledMacros = AssembleMacroValues(buildNumber, enableTime);
 
+	// Write UTF-8 BOM if needed
+	if (writeBOM)
+	{
+		const unsigned char BOM[3] = { 0xEF, 0xBB, 0xBF };
+		buildInfoFile.write(reinterpret_cast<const char*>(&BOM[0]), 3);
+	}
+
 	// Write file header
 	buildInfoFile.write(_FileHeader.data(), _FileHeader.size());
 
 	// Write macro defines and values
 	buildInfoFile.write(assembledMacros.data(), assembledMacros.size());
 
-	// Write EOF signal
-	const std::string eofSignal = u8"/********************** End of generated file **********************/";
+	// Write EOF marker
+	const std::string eofSignal = u8"/********************** End of generated file **********************/\n";
 	buildInfoFile.write(eofSignal.data(), eofSignal.size());
 
 	// Check if write succeeded
@@ -299,29 +332,15 @@ std::vector<std::wstring> GetCommandLineArguments()
 	return commandArguments;
 }
 
-// Print help text for command line arguments
-void PrintHelpText()
-{
-	std::cout << std::endl;
-	std::cout << "USAGE:" << std::endl;
-	std::cout << R"(  BuildInfoGenerator [/h | /help] | ([/time] [/reset] /out "file"))" << std::endl << std::endl;
-
-	std::cout << "OPTIONS:" << std::endl;
-	std::cout << "  /h, /help        Display this help message." << std::endl;
-	std::cout << "  /time            Write build time and date to generated file." << std::endl;
-	std::cout << "  /reset           Reset the generated file and set the build number" << std::endl;
-	std::cout << "                   back to zero." << std::endl;
-	std::cout << R"(  /out "file"      Specify the output file (relative or absolute).)" << std::endl << std::endl;
-}
-
 // Parse all command line arguments and output results. Return false if parsing failed.
-bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHelp_out, std::filesystem::path& filepath_out, bool& enableTime_out, bool& reset_out)
+bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool& showHelp_out, std::filesystem::path& filepath_out, bool& writeBOM_out, bool& enableTime_out, bool& reset_out)
 {
 	// Set output values to default state
 	filepath_out = L"";
 	showHelp_out = false;
 	enableTime_out = false;
 	reset_out = false;
+	writeBOM_out = false;
 
 	// Check for at least one user argument
 	if (arguments.size() <= 1)
@@ -331,12 +350,9 @@ bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHe
 		return false;
 	}
 
-	// Erase first argument (executable path passed by OS), since it's not needed
-	arguments.erase(arguments.begin());
-
-	// Parse all arguments one by one
+	// Parse all arguments one by one. Skip the first argument (executable path passed by OS), since it's not needed.
 	bool argumentOutParsed = false;
-	for (uint64_t i = 0; i < arguments.size(); i++)
+	for (uint64_t i = 1; i < arguments.size(); i++)
 	{
 		if (arguments[i] == L"/help" || arguments[i] == L"/h")
 		{
@@ -349,6 +365,10 @@ bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHe
 		else if (arguments[i] == L"/time")
 		{
 			enableTime_out = true;
+		}
+		else if (arguments[i] == L"/bom")
+		{
+			writeBOM_out = true;
 		}
 		else if (arguments[i] == L"/out" && !argumentOutParsed) // Only parse "/out" once
 		{
@@ -394,6 +414,38 @@ bool ParseCommandLineArguments(std::vector<std::wstring> arguments, bool& showHe
 	return true;
 }
 
+// Print help text for command line arguments
+void PrintHelpText()
+{
+	std::cout << std::endl;
+	std::cout << "USAGE:" << std::endl;
+	std::cout << R"(  BuildInfoGenerator [/h | /help] | ([/time] [/bom] [/reset] /out "file"))" << std::endl << std::endl;
+
+	std::cout << "OPTIONS:" << std::endl;
+	std::cout << "  /h, /help        Display this help message." << std::endl;
+	std::cout << "  /time            Write build time and date to generated file." << std::endl;
+	std::cout << "  /reset           Reset the generated file and set the build number" << std::endl;
+	std::cout << "                   back to zero." << std::endl;
+	std::cout << "  /bom             Write UTF-8 BOM to output file." << std::endl;
+	std::cout << R"(  /out "file"      Specify the output file (relative or absolute).)" << std::endl << std::endl;
+}
+
+// XXX
+bool GetFileEmptyIgnoringBOM(const std::filesystem::path& file, bool& isEmpty_out)
+{
+	// Check for UTF-8 BOM (first 3 bytes)
+	unsigned char readBOM[3] = {};
+	buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
+
+	if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
+	{
+		// No BOM found, reset cursor to beginning
+		buildInfoFile.seekg(0);
+	}
+
+	return true;
+}
+
 // Main routine
 int main()
 {
@@ -407,8 +459,9 @@ int main()
 	bool			showHelp = false;
 	bool			enableTime = false;
 	bool			reset = false;
+	bool			writeBOM = false;
 
-	if (!ParseCommandLineArguments(commandArguments, showHelp, filepath, enableTime, reset))
+	if (!ParseCommandLineArguments(commandArguments, showHelp, filepath, writeBOM, enableTime, reset))
 	{
 		// Parse failed (message got print inside function), show help and exit
 		PrintHelpText();
@@ -437,11 +490,12 @@ int main()
 	// Print update
 	std::cout << "Generating... ";
 
-	// Check if "/reset" is specified or file doesn't exist yet
-	if (reset || !std::filesystem::exists(filepath))
+	// Check if "/reset" is specified or file doesn't exist yet or file is smaller than 4 bytes (empty).
+	// Since there could be an empty file only with the BOM header (3 bytes), all files up to 3 bytes are considered empty.
+	if (reset || !std::filesystem::exists(filepath) || (std::filesystem::file_size(filepath) <= 3))
 	{
 		// Create new file
-		if (!WriteBuildInfoFile(filepath.wstring(), 0, enableTime))
+		if (!WriteBuildInfoFile(filepath.wstring(), writeBOM, enableTime, 0))
 			return -1; // Write failed, error message got printed inside function
 	}
 	else
@@ -466,7 +520,7 @@ int main()
 		buildNumber++;
 
 		// Write updated file
-		if (!WriteBuildInfoFile(filepath.wstring(), buildNumber, enableTime))
+		if (!WriteBuildInfoFile(filepath.wstring(), writeBOM, enableTime, buildNumber))
 			return -1; // Write failed, error message got printed inside function
 	}
 
