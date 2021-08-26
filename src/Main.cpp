@@ -40,6 +40,13 @@ SOFTWARE.
 //		-Optionally generate two sections (Debug, Release) in the output file to have different build info
 //		corresponding to the current configuration.
 
+// Check for UNICODE
+#ifndef UNICODE
+#error Please set Unicode charset instead of Multibyte for compilation.
+#endif
+
+// Force UTF-8 exec char set. This is deprecated, specify "/utf-8" as an additional compiler arument in the project settings!
+#pragma execution_character_set( "utf-8" )
 
 #include <iostream>
 #include <fstream>
@@ -142,12 +149,12 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 	buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
 
 	if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
-	{
-		// No BOM found, reset cursor to beginning
-		buildInfoFile.seekg(0);
-	}
+		buildInfoFile.seekg(0); // No BOM found, reset cursor to beginning
 
-	// Read file
+	// Reset failbit and eofbit
+	buildInfoFile.clear();
+
+	// Read and parse file
 	std::pair<bool, uint64_t> macroBuildNumberResult(false, 0); // (found, data)
 	std::pair<bool, uint64_t> macroPauseResult(false, 0); // (found, data)
 	std::string currentLine = "";
@@ -201,7 +208,7 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 			break;
 	}
 
-	// Close the file
+	// Close file
 	buildInfoFile.close();
 
 	// Check if build number macro was found (necessary)
@@ -233,7 +240,7 @@ std::string ToStringFixedWidth(const int64_t& integer, const uint8_t& width = 2)
 }
 
 // Assemble the string which contains all macro defines (used by WriteBuildNumberFile)
-std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableTime)
+const std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableTime)
 {
 	// Assemble string
 	std::string assembled = u8"#define " + _MacroBuildNumber + u8" " + std::to_string(buildNumber) + u8"\n\n";
@@ -277,7 +284,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const bool& write
 	// Assemble all macro defines and values as std::string for writing
 	const std::string assembledMacros = AssembleMacroValues(buildNumber, enableTime);
 
-	// Write UTF-8 BOM if needed
+	// Write UTF-8 BOM if requested
 	if (writeBOM)
 	{
 		const unsigned char BOM[3] = { 0xEF, 0xBB, 0xBF };
@@ -332,7 +339,7 @@ std::vector<std::wstring> GetCommandLineArguments()
 	return commandArguments;
 }
 
-// Parse all command line arguments and output results. Return false if parsing failed.
+// Parse all command line arguments and output results. Return false if parsing failed. "filepath_out" is empty if no "/out" argument is specified
 bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool& showHelp_out, std::filesystem::path& filepath_out, bool& writeBOM_out, bool& enableTime_out, bool& reset_out)
 {
 	// Set output values to default state
@@ -351,7 +358,7 @@ bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool&
 	}
 
 	// Parse all arguments one by one. Skip the first argument (executable path passed by OS), since it's not needed.
-	bool argumentOutParsed = false;
+	bool outArgumentFound = false;
 	for (uint64_t i = 1; i < arguments.size(); i++)
 	{
 		if (arguments[i] == L"/help" || arguments[i] == L"/h")
@@ -370,9 +377,9 @@ bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool&
 		{
 			writeBOM_out = true;
 		}
-		else if (arguments[i] == L"/out" && !argumentOutParsed) // Only parse "/out" once
+		else if (arguments[i] == L"/out" && !outArgumentFound) // Only parse "/out" once
 		{
-			argumentOutParsed = true; // Allow only one "/out" argument
+			outArgumentFound = true; // Allow only one "/out" argument
 
 			// Next argument should be the filename, check if another argument is present
 			if ((i + 1) >= arguments.size())
@@ -382,17 +389,11 @@ bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool&
 			}
 
 			// Parse filename
-			if (arguments[i + 1] == L"")
-			{
-				// Empty filename
-				std::cout << "[ERROR]: No filename after \"/out\" specified!" << std::endl;
-				return false;
-			}
-
 			filepath_out = arguments[i + 1];
 
-			// Skip next argument (filename), it got already parsed here
+			// Skip next argument (filename) because it got already parsed here
 			i++;
+
 			continue;
 		}
 		else
@@ -401,14 +402,6 @@ bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool&
 			std::wcout << L"[ERROR]: Unexpected argument \"" << arguments[i] << L"\"." << std::endl;
 			return false;
 		}
-	}
-
-	// Check if filename got parsed (not needed if only help should be shown)
-	if (!showHelp_out && !argumentOutParsed)
-	{
-		// No filename specified
-		std::cout << "[ERROR]: No output file specified!" << std::endl;
-		return false;
 	}
 
 	return true;
@@ -434,14 +427,14 @@ void PrintHelpText()
 bool GetFileEmptyIgnoringBOM(const std::filesystem::path& file, bool& isEmpty_out)
 {
 	// Check for UTF-8 BOM (first 3 bytes)
-	unsigned char readBOM[3] = {};
-	buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
+	//unsigned char readBOM[3] = {};
+	//buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
 
-	if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
-	{
-		// No BOM found, reset cursor to beginning
-		buildInfoFile.seekg(0);
-	}
+	//if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
+	//{
+	//	// No BOM found, reset cursor to beginning
+	//	buildInfoFile.seekg(0);
+	//}
 
 	return true;
 }
@@ -463,7 +456,7 @@ int main()
 
 	if (!ParseCommandLineArguments(commandArguments, showHelp, filepath, writeBOM, enableTime, reset))
 	{
-		// Parse failed (message got print inside function), show help and exit
+		// Parse failed (error message got print inside function), show help and exit
 		PrintHelpText();
 		return -1;
 	}
@@ -475,6 +468,14 @@ int main()
 		PrintHelpText();
 
 		return 0;
+	}
+
+	// Check if filename is empty
+	if (filepath == L"")
+	{
+		std::cout << "[ERROR]: No output filename specified!" << std::endl;
+		PrintHelpText();
+		return -1;
 	}
 
 	// Make path absolute
