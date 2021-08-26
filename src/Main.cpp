@@ -45,7 +45,7 @@ SOFTWARE.
 #error Please set Unicode charset instead of Multibyte for compilation.
 #endif
 
-// Force UTF-8 exec char set. This is deprecated, specify "/utf-8" as an additional compiler arument in the project settings!
+// Force UTF-8 exec char set. This is deprecated, specify "/utf-8" as an additional compiler argument in the project settings!
 #pragma execution_character_set( "utf-8" )
 
 #include <iostream>
@@ -95,7 +95,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	if (spacePos == std::string::npos)
 	{
 		// Space not found
-		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a space. File may be damaged, try \"/reset\"." << std::endl;
+		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a space. File may be damaged, try initializing it with \"/reset\"." << std::endl;
 		return false;
 	}
 
@@ -104,7 +104,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	if (numberString == "")
 	{
 		// No value found
-		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a value. File may be damaged, try \"/reset\"." << std::endl;
+		std::cout << "[ERROR]: Unknown Syntax after \"" << currentLineView.substr(startPoint) << "\"! Expected a value. File may be damaged, try initializing it with \"/reset\"." << std::endl;
 		return false;
 	}
 
@@ -112,11 +112,10 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	numberString.erase(std::remove(numberString.begin(), numberString.end(), '\n'), numberString.end());
 	numberString.erase(std::remove(numberString.begin(), numberString.end(), '\r'), numberString.end());
 
-	// Check for minus sign in numberString, because std::stoull will happily convert negative numbers
-	if (numberString.find('-') != std::string::npos)
+	// Check for any char that is not a digit
+	if (numberString.find_first_not_of("0123456789") != std::string::npos)
 	{
-		// No negative values allowed
-		std::cout << "[ERROR]: Negative values for \"" << currentLineView.substr(startPoint) << "\" are not allowed!" << std::endl;
+		std::cout << "[ERROR]: Non digit characters are not allowed as value: \"" << currentLineView.substr(startPoint) << "\"" << std::endl;
 		return false;
 	}
 
@@ -125,7 +124,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 		parsedInteger_out = std::stoull(numberString);
 	}
 	catch (...) {
-		std::cout << "[ERROR]: Could not parse value of \"" << currentLineView.substr(startPoint) << "\". File may be damaged, try \"/reset\"." << std::endl;
+		std::cout << "[ERROR]: Could not parse value of \"" << currentLineView.substr(startPoint) << "\". File may be damaged, try initializing it with \"/reset\"." << std::endl;
 		return false;
 	}
 
@@ -144,19 +143,19 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 		return false;
 	}
 
-	// Read first 3 bytes and check for UTF-8 BOM
-	unsigned char readBOM[3] = {};
+	// Try reading the first 3 bytes and check for UTF-8 BOM
+	unsigned char readBOM[3] = { };
 	buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
 
 	if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
 		buildInfoFile.seekg(0); // No BOM found, reset cursor to beginning
 
-	// Reset failbit and eofbit
+	// Reset error state flags in case we read less than 3 bytes
 	buildInfoFile.clear();
 
 	// Read and parse file
-	std::pair<bool, uint64_t> macroBuildNumberResult(false, 0); // (found, data)
-	std::pair<bool, uint64_t> macroPauseResult(false, 0); // (found, data)
+	std::pair<bool, uint64_t> macroBuildNumberResult(false, 0); // pair(found, data)
+	std::pair<bool, uint64_t> macroPauseResult(false, 0); // pair(found, data)
 	std::string currentLine = "";
 
 	while (std::getline(buildInfoFile, currentLine)) // Read file line by line
@@ -377,7 +376,7 @@ bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool&
 		{
 			writeBOM_out = true;
 		}
-		else if (arguments[i] == L"/out" && !outArgumentFound) // Only parse "/out" once
+		else if (arguments[i] == L"/out" && !outArgumentFound) // Only parse "/out"-argument once, another one outputs an error
 		{
 			outArgumentFound = true; // Allow only one "/out" argument
 
@@ -423,18 +422,28 @@ void PrintHelpText()
 	std::cout << R"(  /out "file"      Specify the output file (relative or absolute).)" << std::endl << std::endl;
 }
 
-// XXX
-bool GetFileEmptyIgnoringBOM(const std::filesystem::path& file, bool& isEmpty_out)
+// Get if the file exists and is "empty" (see comment below)
+bool GetFileInfo(const std::filesystem::path& file, bool& exists_out, bool& isEmpty_out)
 {
-	// Check for UTF-8 BOM (first 3 bytes)
-	//unsigned char readBOM[3] = {};
-	//buildInfoFile.read(reinterpret_cast<char*>(&readBOM[0]), 3);
+	exists_out = false;
+	isEmpty_out = false;
 
-	//if (readBOM[0] != 0xEF || readBOM[1] != 0xBB || readBOM[2] != 0xBF)
-	//{
-	//	// No BOM found, reset cursor to beginning
-	//	buildInfoFile.seekg(0);
-	//}
+	try {
+		exists_out = std::filesystem::exists(file);
+
+		if (exists_out)
+		{
+			// We just assume that any file with 3 bytes or less is empty.
+			// This is needed because an "empty" UTF-8 BOM file still contains the BOM (3 bytes).
+			// For simplicity, we do not check if the file is actually ASCII, in which case a size of 3 bytes would not be an empty file.
+			// But since an ASCII file with only 3 bytes is invalid (for the parser) anyway, there is no point in checking the file encoding.
+			isEmpty_out = (std::filesystem::file_size(file) <= 3);
+		}
+	}
+	catch (...) {
+		std::cout << "[ERROR]: Could not get info about specified file!" << std::endl;
+		return false;
+	}
 
 	return true;
 }
@@ -447,13 +456,13 @@ int main()
 	// Get command line arguments
 	const std::vector<std::wstring> commandArguments = GetCommandLineArguments();
 
-	// Parse user arguments
-	std::filesystem::path	filepath = L"";
+	std::filesystem::path filepath = L"";
 	bool			showHelp = false;
 	bool			enableTime = false;
 	bool			reset = false;
 	bool			writeBOM = false;
 
+	// Parse user arguments
 	if (!ParseCommandLineArguments(commandArguments, showHelp, filepath, writeBOM, enableTime, reset))
 	{
 		// Parse failed (error message got print inside function), show help and exit
@@ -478,7 +487,7 @@ int main()
 		return -1;
 	}
 
-	// Make path absolute
+	// Make file path absolute
 	filepath = std::filesystem::absolute(filepath);
 
 	// Check if filename is a directory
@@ -488,14 +497,20 @@ int main()
 		return -1;
 	}
 
+	// Get file info
+	bool fileExists = false;
+	bool fileIsEmptyRespectingBOM = false;
+
+	if (!GetFileInfo(filepath, fileExists, fileIsEmptyRespectingBOM))
+		return -1; // Could not get file info. Error message got printed inside function.
+
 	// Print update
 	std::cout << "Generating... ";
 
-	// Check if "/reset" is specified or file doesn't exist yet or file is smaller than 4 bytes (empty).
-	// Since there could be an empty file only with the BOM header (3 bytes), all files up to 3 bytes are considered empty.
-	if (reset || !std::filesystem::exists(filepath) || (std::filesystem::file_size(filepath) <= 3))
+	// Write fresh file if "/reset" is specified, file doesn't exist or file is empty (respecting BOM)
+	if (reset || !fileExists || fileIsEmptyRespectingBOM)
 	{
-		// Create new file
+		// Create fresh file
 		if (!WriteBuildInfoFile(filepath.wstring(), writeBOM, enableTime, 0))
 			return -1; // Write failed, error message got printed inside function
 	}
