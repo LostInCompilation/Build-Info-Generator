@@ -1,13 +1,14 @@
 # Build Info Generator
 
+
 ## Contents
 
 - [Description](#description)
 - [Features](#features)
 - [Download](#download)
 - [How to use it](#how-to-use-it)
-  - [General](#general)
   - [Command line interface](#command-line-interface)
+    - [Usage](#usage)
     - [Example](#example)
   - [Integrating in Visual Studio](#integrating-in-visual-studio)
 - [Generated example file](#generated-example-file)
@@ -35,7 +36,7 @@ See [instructions](#how-to-use-it) below for usage and how to include the tool i
 - Optional time and date of build
 - Full Unicode support for paths / filenames
 - Generated file is UTF-8 encoded, optionally with BOM (See [Command line interface: /bom](#command-line-interface))
-- Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([show sample file](#sample-file))
+- Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([show example file](#generated-example-file))
 - No need to build it yourself, compiled executable (x64) can be found [here](x64/Release/BuildInfoGenerator.exe)
 
 
@@ -46,13 +47,14 @@ You can download a prebuilt executable [here (x64)](x64/Release/BuildInfoGenerat
 Needs the Visual Studio 2019 C++ runtime (vc_redist.x64.exe). Get it [from Microsoft](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
 If you have Visual Studio 2015 or newer installed, you don't need to install the Visual Studio C++ runtime.
 
+
 ## How to use it
 
-### General
-
-**TODO**
 
 ### Command line interface
+
+
+#### Usage
 
 ~~~
 Usage:
@@ -67,14 +69,20 @@ Options:
     /out "file"      Specify the output file (relative or absolute).
 ~~~
 
+
 #### Example
 
-Generate or update the file "BuildInfo.h" with incrementing build number and build time and date.
-If the file already exists, it's build number will be increased.
-The output file will be UTF-8 encoded, no matter if it contains a BOM or not (see /bom option).
+To update or generate the file "C:\MyProject\BuildInfo.h" with an incrementing build number
+and the build time and date, see command below.<br>
+If the file already exists, it's build number will be increased by one and time and date updated. Otherwise a new file with build number 0 and current time will be generated.
+
 ~~~
-BuildInfoGenerator.exe /time /out "BuildInfo.h"
+BuildInfoGenerator.exe /time /out "C:\MyProject\BuildInfo.h"
 ~~~
+
+The output file will be UTF-8 encoded, no matter if it contains a BOM or not. To write an UTF-8 BOM
+to the beginning of the output file (recommended), add the "/bom" argument [(see command line interface usage above)](#usage)
+
 
 ### Integrating in Visual Studio
 
