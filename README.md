@@ -74,7 +74,7 @@ Options:
 
 To update or generate the file "C:\MyProject\BuildInfo.h" with an incrementing build number
 and the build time and date, see command below.<br>
-If the file already exists, it's build number will be increased by one and time and date updated. Otherwise a new file with build number 0 and current time will be generated.
+If the file already exists, it's build number will be increased by one and time and date will be updated. Otherwise a new file with build number 0 and current time will be generated.
 
 ~~~
 BuildInfoGenerator.exe /time /out "C:\MyProject\BuildInfo.h"
