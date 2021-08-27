@@ -1,0 +1,12 @@
+﻿# EditorConfig file for BuildInfoGeneraor
+
+# Use this configuration for the whole solution including all projects in it
+root = true
+
+# Configuration for .h and .cpp files
+# Use UTF-8 with BOM for every source file by default
+[*.{h,cpp}]
+end_of_line = crlf
+charset = utf-8-bom
+insert_final_newline = true
+indent_style = tab

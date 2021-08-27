@@ -12,14 +12,16 @@
   - [Integrating in Visual Studio](#integrating-in-visual-studio)
 - [Generated sample file](#generated-sample-file)
 
-*See also: [License (MIT)](LICENSE.md)*
+*See also: [License (zlib)](LICENSE.md)*
 
 
 ## Description
 
-A simple command line tool with permissive license (zlib) to auto generate a header file containing an incrementing build number and the current build date and time.
-It can be easily integrated into almost any IDE, which supports custom build events (a command that gets called before compilation in the IDE starts).
+A simple command line tool with a permissive license (zlib) to auto generate a header file containing an incrementing build number and the current build time and date.
+It can be easily integrated into almost any IDE, which supports custom build events (a command/program that gets called from the IDE before/during compilation).
 The generated header file can simply be added and included in any of your projects. It will be automatically updated every time you build your project.
+It exists because I don't like to bloat VisualStudio with lots of plugins which will eat resources when I don't need them.
+So a small program **which only gets called** when the build process in the IDE actually starts is much more convinient.
 
 In the future constexpr globals will be supported besides macros.
 
@@ -32,23 +34,23 @@ See [instructions](#how-to-use-it) below for usage and how to include the tool i
 - Build number counter
 - Optional time and date of build
 - Full Unicode support for paths / filenames
-- Generated file is UTF-8 encoded with or without BOM (See [Command line interface](#command-line-interface))
+- Generated file is UTF-8 encoded, optionally with BOM (See [Command line interface: /bom](#command-line-interface))
 - Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([show sample file](#sample-file))
-- No need to build it yourself, compiled executable can be found [here](x64/Release/BuildInfoGenerator.exe)
+- No need to build it yourself, compiled executable (x64) can be found [here](x64/Release/BuildInfoGenerator.exe)
 
 
 ## Download
 
-You can download a prebuilt executable [here](x64/Release/BuildInfoGenerator.exe).
+You can download a prebuilt executable [here (x64)](x64/Release/BuildInfoGenerator.exe).
 
 Needs the Visual Studio 2019 C++ runtime (vc_redist.x64.exe). Get it [from Microsoft](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
-
+If you have Visual Studio 2015 or newer installed, you don't need to install the Visual Studio C++ runtime.
 
 ## How to use it
 
 ### General
 
-ToDo: General explanation
+**TODO**
 
 ### Command line interface
 
@@ -103,7 +105,7 @@ Do not forget to put the executable path and output file path into quotation mar
 #define BUILD_INFO_GENERATOR_PAUSE 0
 
 // Generated info
-#define BUILD_INFO_GENERATOR_BUILD_NUMBER 1
+#define BUILD_INFO_GENERATOR_BUILD_NUMBER 42
 
 #define BUILD_INFO_GENERATOR_DAY 17
 #define BUILD_INFO_GENERATOR_MONTH 08
