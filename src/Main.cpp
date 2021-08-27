@@ -239,7 +239,7 @@ std::string ToStringFixedWidth(const int64_t& integer, const uint8_t& width = 2)
 }
 
 // Assemble the string which contains all macro defines (used by WriteBuildNumberFile)
-const std::string AssembleMacroValues(const uint64_t& buildNumber, const bool& enableTime)
+const std::string AssembleMacroValuesToString(const uint64_t& buildNumber, const bool& enableTime)
 {
 	// Assemble string
 	std::string assembled = u8"#define " + _MacroBuildNumber + u8" " + std::to_string(buildNumber) + u8"\n\n";
@@ -281,7 +281,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const bool& write
 	}
 
 	// Assemble all macro defines and values as std::string for writing
-	const std::string assembledMacros = AssembleMacroValues(buildNumber, enableTime);
+	const std::string assembledMacros = AssembleMacroValuesToString(buildNumber, enableTime);
 
 	// Write UTF-8 BOM if requested
 	if (writeBOM)

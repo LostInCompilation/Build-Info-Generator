@@ -10,7 +10,7 @@
   - [Command line interface](#command-line-interface)
     - [Example](#example)
   - [Integrating in Visual Studio](#integrating-in-visual-studio)
-- [Generated sample file](#generated-sample-file)
+- [Generated example file](#generated-example-file)
 
 *See also: [License (zlib)](LICENSE.md)*
 
@@ -88,7 +88,7 @@ Do not forget to put the executable path and output file path into quotation mar
 ~~~
 
 
-## Generated sample file
+## Generated example file
 
 ~~~cpp
 /********************************************************************/
