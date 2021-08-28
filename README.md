@@ -37,12 +37,12 @@ See [instructions](#how-to-use-it) below for usage and how to include the tool i
 - Full Unicode support for paths / filenames
 - Generated file is UTF-8 encoded, optionally with BOM (See [Command line interface: /bom](#command-line-interface))
 - Can be paused with BUILD_INFO_GENERATOR_PAUSE macro ([show example file](#generated-example-file))
-- No need to build it yourself, compiled executable (x64) can be found [here](x64/Release/BuildInfoGenerator.exe)
+- No need to build it yourself, compiled executable for Windows (x64) can be found [here](x64/Release/BuildInfoGenerator.exe)
 
 
 ## Download
 
-You can download a prebuilt executable [here (x64)](x64/Release/BuildInfoGenerator.exe).
+You can download a prebuilt executable [here (x64, Windows)](x64/Release/BuildInfoGenerator.exe).
 
 Needs the Visual Studio 2019 C++ runtime (vc_redist.x64.exe). Get it [from Microsoft](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0).
 If you have Visual Studio 2015 or newer installed, you don't need to install the Visual Studio C++ runtime.

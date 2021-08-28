@@ -33,6 +33,7 @@ the following restrictions:
 /*          Reworked 2021, original version from 2019.              */
 /********************************************************************/
 
+//********************************************************************
 // ToDo:
 //		-Store (boolean) results of parsed arguments inside an unordered_map<string, bool> instead of passing many arguments to every function.
 //		This is not important but is cleaner and more flexible if more command line arguments will be added.
@@ -40,14 +41,17 @@ the following restrictions:
 //		-Optionally generate two sections (Debug, Release) in the output file to have different build info
 //		corresponding to the current configuration.
 
+//********************************************************************
 // Check for UNICODE
 #ifndef UNICODE
 #error Please set Unicode charset instead of Multibyte for compilation.
 #endif
 
-// Force UTF-8 exec char set. This is deprecated, specify "/utf-8" as an additional compiler argument in the project settings!
+// Force UTF-8 execution character set. This is deprecated, specify "/utf-8" as an additional compiler argument in the project settings!
 //#pragma execution_character_set( "utf-8" )
 
+//********************************************************************
+// Includes
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -57,6 +61,13 @@ the following restrictions:
 #include <filesystem>
 #include <Windows.h>
 
+//********************************************************************
+// Version
+const uint16_t VERSION_MAJOR = 1;
+const uint16_t VERSION_MINOR = 2;
+const uint16_t VERSION_REVISION = 0;
+
+//********************************************************************
 // Macro names (should be ASCII, because currently the macro parser can't handle Unicode chars. The file is still written as UTF-8)
 const std::string _MacroPause = "BUILD_INFO_GENERATOR_PAUSE";
 
@@ -72,6 +83,7 @@ const std::string _MacroBuildMinute = "BUILD_INFO_GENERATOR_MINUTE";
 const std::string _MacroBuildSecond = "BUILD_INFO_GENERATOR_SECOND";
 const std::string _MacroBuildTimeString = "BUILD_INFO_GENERATOR_TIME_STR";
 
+//********************************************************************
 // File header to write (UTF-8)
 const std::string _FileHeader =
 u8"/********************************************************************/\n" \
@@ -86,7 +98,7 @@ u8"// To disable updates to this file, set \"" + _MacroPause + u8R"(" to "1".)" 
 u8"#define " + _MacroPause + u8" 0\n\n" \
 u8"// Generated info\n";
 
-
+//********************************************************************
 // Parse the macro in the current line
 bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size_t& startPoint, uint64_t& parsedInteger_out)
 {
@@ -131,6 +143,7 @@ bool ParseMacroInCurrentLine(const std::string_view& currentLineView, const size
 	return true;
 }
 
+//********************************************************************
 // Read a build info file and return the parsed information. The function aborts when a macro cannot be parsed
 bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNumber_out, bool& pauseEnabled_out)
 {
@@ -229,6 +242,7 @@ bool ReadBuildInfoFile(const std::wstring_view& filenameView, uint64_t& buildNum
 	return true;
 }
 
+//********************************************************************
 // Return the number as string with fixed digit count
 std::string ToStringFixedWidth(const int64_t& integer, const uint8_t& width = 2)
 {
@@ -238,8 +252,9 @@ std::string ToStringFixedWidth(const int64_t& integer, const uint8_t& width = 2)
 	return ss.str();
 }
 
+//********************************************************************
 // Assemble the string which contains all macro defines (used by WriteBuildNumberFile)
-const std::string AssembleMacroValuesToString(const uint64_t& buildNumber, const bool& enableTime)
+std::string AssembleMacroValuesToString(const uint64_t& buildNumber, const bool& enableTime)
 {
 	// Assemble string
 	std::string assembled = u8"#define " + _MacroBuildNumber + u8" " + std::to_string(buildNumber) + u8"\n\n";
@@ -269,6 +284,7 @@ const std::string AssembleMacroValuesToString(const uint64_t& buildNumber, const
 	return assembled;
 }
 
+//********************************************************************
 // Write a build info file (UTF-8)
 bool WriteBuildInfoFile(const std::wstring_view& filenameView, const bool& writeBOM, const bool& enableTime, const uint64_t& buildNumber)
 {
@@ -315,6 +331,7 @@ bool WriteBuildInfoFile(const std::wstring_view& filenameView, const bool& write
 	return true;
 }
 
+//********************************************************************
 // Get the arguments as wide strings (UTF-16)
 std::vector<std::wstring> GetCommandLineArguments()
 {
@@ -338,6 +355,7 @@ std::vector<std::wstring> GetCommandLineArguments()
 	return commandArguments;
 }
 
+//********************************************************************
 // Parse all command line arguments and output results. Return false if parsing failed. "filepath_out" is empty if no "/out" argument is specified
 bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool& showHelp_out, std::filesystem::path& filepath_out, bool& writeBOM_out, bool& enableTime_out, bool& reset_out)
 {
@@ -406,10 +424,14 @@ bool ParseCommandLineArguments(const std::vector<std::wstring>& arguments, bool&
 	return true;
 }
 
+//********************************************************************
 // Print help text for command line arguments
 void PrintHelpText()
 {
 	std::cout << std::endl;
+
+	// Print help
+	std::cout << "---------------------------------------------------------------------------" << std::endl;
 	std::cout << "USAGE:" << std::endl;
 	std::cout << R"(  BuildInfoGenerator [/h | /help] | ([/time] [/bom] [/reset] /out "file"))" << std::endl << std::endl;
 
@@ -419,9 +441,15 @@ void PrintHelpText()
 	std::cout << "  /reset           Reset the generated file and set the build number" << std::endl;
 	std::cout << "                   back to zero." << std::endl;
 	std::cout << "  /bom             Write UTF-8 BOM to output file." << std::endl;
-	std::cout << R"(  /out "file"      Specify the output file (relative or absolute).)" << std::endl << std::endl;
+	std::cout << R"(  /out "file"      Specify the output file (relative or absolute).)" << std::endl;
+	std::cout << "---------------------------------------------------------------------------" << std::endl << std::endl;
+
+	// Print version
+	const std::string versionString = "V" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + "." + std::to_string(VERSION_REVISION);
+	std::cout << "VERSION: " << versionString << std::endl << std::endl;
 }
 
+//********************************************************************
 // Get if the file exists and is "empty" (see comment below)
 bool GetFileInfo(const std::filesystem::path& file, bool& exists_out, bool& isEmptyRespectBOM_out)
 {
@@ -448,6 +476,7 @@ bool GetFileInfo(const std::filesystem::path& file, bool& exists_out, bool& isEm
 	return true;
 }
 
+//********************************************************************
 // Main routine
 int main()
 {
